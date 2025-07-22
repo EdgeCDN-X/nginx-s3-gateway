@@ -86,13 +86,6 @@ server {
         include /etc/nginx/conf.d/gateway/s3_location_common.conf;
     }
 
-    # Same as the primary location above but handling and caching
-    # byte range requests efficiently
-    location @s3_sliced {
-        proxy_pass_header  Cache-Control;
-        proxy_set_header   Range $slice_range;
-        include /etc/nginx/conf.d/gateway/s3_location_common.conf;
-    }
 
     location @s3PreListing {
         # We include only the headers needed for the authentication signatures that
