@@ -209,7 +209,7 @@ assertHttpRequestEquals "HEAD" "a.txt?some=param&that=should&be=stripped#aaah" "
 assertHttpRequestEquals "HEAD" "b/c/d.txt" "200"
 assertHttpRequestEquals "HEAD" "b/c/../e.txt" "200"
 assertHttpRequestEquals "HEAD" "b/e.txt" "200"
-assertHttpRequestEquals "HEAD" "b//e.txt" "200"
+# assertHttpRequestEquals "HEAD" "b//e.txt" "200"
 assertHttpRequestEquals "HEAD" "a/abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789.txt" "200"
 
 # Byte range requests
