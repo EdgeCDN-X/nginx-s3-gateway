@@ -5,8 +5,6 @@ on:
     branches: [main]
   pull_request:
     branches: [main]
-  schedule:
-    - cron: "0 0 * * 1"
   workflow_dispatch:
 env:
   CI: true
@@ -306,18 +304,11 @@ jobs:
           provenance: false
           tags: localhost:5000/nginx-oss-s3-gateway:oss
 
-      - name: Login to GitHub Container Registry
-        uses: docker/login-action@74a5d142397b4f367a81961eba4e8cd7edddf772 # v3.4.0
-        with:
-          registry: ghcr.io
-          username: ${{ github.repository_owner }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
       - name: Login to Docker Hub
         uses: docker/login-action@74a5d142397b4f367a81961eba4e8cd7edddf772 # v3.4.0
         with:
-          username: ${{ secrets.DOCKER_HUB_USERNAME }}
-          password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
+          username: ${{ secrets.DOCKER_LOGIN }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
 
       # This second invocation of the build/push should just use the existing build cache.
       - name: Build and push image [oss]
@@ -329,10 +320,8 @@ jobs:
           platforms: linux/amd64,linux/arm64
           provenance: false
           tags: |
-            ghcr.io/${{ github.repository }}/nginx-oss-s3-gateway:latest-${{ steps.date.outputs.date }}
-            ghcr.io/${{ github.repository }}/nginx-oss-s3-gateway:latest
-            nginxinc/nginx-s3-gateway:latest-${{ steps.date.outputs.date }}
-            nginxinc/nginx-s3-gateway:latest
+            fr6nco/nginx-s3-gateway:latest-${{ steps.date.outputs.date }}
+            fr6nco/nginx-s3-gateway:latest
 
       - name: Build and push image [latest-njs]
         uses: docker/build-push-action@263435318d21b8e681c14492fe198d362a7d2c83 # v6.18.0
@@ -345,10 +334,8 @@ jobs:
           platforms: linux/amd64,linux/arm64
           provenance: false
           tags: |
-            ghcr.io/${{ github.repository }}/nginx-oss-s3-gateway:latest-njs-oss-${{ steps.date.outputs.date }}
-            ghcr.io/${{ github.repository }}/nginx-oss-s3-gateway:latest-njs-oss
-            nginxinc/nginx-s3-gateway:latest-njs-oss-${{ steps.date.outputs.date }}
-            nginxinc/nginx-s3-gateway:latest-njs-oss
+            fr6nco/nginx-s3-gateway:latest-njs-oss-${{ steps.date.outputs.date }}
+            fr6nco/nginx-s3-gateway:latest-njs-oss
 
       - name: Build and push image [unprivileged]
         uses: docker/build-push-action@263435318d21b8e681c14492fe198d362a7d2c83 # v6.18.0
@@ -361,7 +348,5 @@ jobs:
           platforms: linux/amd64,linux/arm64
           provenance: false
           tags: |
-            ghcr.io/${{ github.repository }}/nginx-oss-s3-gateway:unprivileged-oss-${{ steps.date.outputs.date }}
-            ghcr.io/${{ github.repository }}/nginx-oss-s3-gateway:unprivileged-oss
-            nginxinc/nginx-s3-gateway:unprivileged-oss-${{ steps.date.outputs.date }}
-            nginxinc/nginx-s3-gateway:unprivileged-oss
+            fr6nco/nginx-s3-gateway:unprivileged-oss-${{ steps.date.outputs.date }}
+            fr6nco/nginx-s3-gateway:unprivileged-oss
