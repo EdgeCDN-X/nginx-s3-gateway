@@ -7,7 +7,7 @@ services:
     depends_on:
       minio:
         condition: service_healthy
-    image: "nginx-s3-gateway"
+    image: "fa43b8b6b14b"
     ports:
       - "8989:${NGINX_INTERNAL_PORT-80}/tcp"
     links:
