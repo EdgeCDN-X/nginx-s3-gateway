@@ -38,27 +38,6 @@ server {
     # information that could be used to find an exploit.
     server_tokens off;
 
-    # Uncomment this for a HTTP header that will let you know the cache status
-    # of an object.
-    # add_header X-Cache-Status $upstream_cache_status;
-
-    # Proxy caching configuration. Customize this for your needs.
-    proxy_cache s3_cache;
-    proxy_cache_valid 200 302 ${PROXY_CACHE_VALID_OK};
-    proxy_cache_valid 404 ${PROXY_CACHE_VALID_NOTFOUND};
-    proxy_cache_valid 403 ${PROXY_CACHE_VALID_FORBIDDEN};
-    proxy_cache_methods GET HEAD;
-    # When this is enabled a HEAD request to NGINX will result in a GET
-    # request upstream. Unfortunately, proxy_cache_convert_head has to be
-    # disabled because there is no way for the signatures generation code to
-    # get access to the metadata in the GET request that is sent upstream.
-    proxy_cache_convert_head off;
-    proxy_cache_revalidate on;
-    proxy_cache_background_update on;
-    proxy_cache_lock on;
-    proxy_cache_use_stale error timeout http_500 http_502 http_503 http_504;
-    proxy_cache_key "$request_method$host$uri";
-
     # If you need to support proxying range request, refer to this article:
     # https://www.nginx.com/blog/smart-efficient-byte-range-caching-nginx/
 
@@ -103,20 +82,10 @@ server {
     # This is the primary location that proxies the request to s3
     # See the included s3_location_common.conf file for all logic
     location @s3 {
+        proxy_pass_header Cache-Control;
         include /etc/nginx/conf.d/gateway/s3_location_common.conf;
     }
 
-    # Same as the primary location above but handling and caching
-    # byte range requests efficiently
-    location @s3_sliced {
-        proxy_cache s3_cache_slices;
-        proxy_cache_valid 200 302 206 ${PROXY_CACHE_VALID_OK};
-        proxy_cache_key "$request_method$host$uri$slice_range";
-
-        slice             ${PROXY_CACHE_SLICE_SIZE};
-        proxy_set_header   Range $slice_range;
-        include /etc/nginx/conf.d/gateway/s3_location_common.conf;
-    }
 
     location @s3PreListing {
         # We include only the headers needed for the authentication signatures that
