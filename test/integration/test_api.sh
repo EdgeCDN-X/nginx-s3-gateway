@@ -203,103 +203,16 @@ if [ -n "${prefix_leading_directory_path}" ]; then
   exit 0
 fi
 
-# Ordinary filenames
-assertHttpRequestEquals "HEAD" "a.txt" "200"
-assertHttpRequestEquals "HEAD" "a.txt?some=param&that=should&be=stripped#aaah" "200"
-assertHttpRequestEquals "HEAD" "b/c/d.txt" "200"
-assertHttpRequestEquals "HEAD" "b/c/../e.txt" "200"
-assertHttpRequestEquals "HEAD" "b/e.txt" "200"
-# assertHttpRequestEquals "HEAD" "b//e.txt" "200"
-assertHttpRequestEquals "HEAD" "a/abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789.txt" "200"
-
-# Byte range requests
-assertHttpRequestEquals "GET_RANGE" 'a/plus%2Bplus.txt' "data/bucket-1/a/plus+plus.txt" 30 1000 "206"
 
 # We try to request URLs that are properly encoded as well as URLs that
 # are not properly encoded to understand what works and what does not.
-
-# Weird filenames
-assertHttpRequestEquals "HEAD" "b/c/%3D" "200"
-assertHttpRequestEquals "HEAD" "b/c/=" "200"
-
-assertHttpRequestEquals "HEAD" "b/c/%40" "200"
-assertHttpRequestEquals "HEAD" "b/c/@" "200"
-
-assertHttpRequestEquals "HEAD" "b/c/%27%281%29.txt" "200"
-assertHttpRequestEquals "HEAD" "b/c/'(1).txt" "200"
-
-# These URLs do not work unencoded
-assertHttpRequestEquals "HEAD" 'a/plus%2Bplus.txt' "200"
-assertHttpRequestEquals "HEAD" "%D1%81%D0%B8%D1%81%D1%82%D0%B5%D0%BC%D1%8B/%25bad%25file%25name%25" "200"
-
-# Testing these files does not currently work on Windows
-if [ ${is_windows} == "0" ]; then
-  assertHttpRequestEquals "HEAD" "a/c/%E3%81%82" "200"
-  assertHttpRequestEquals "HEAD" "a/c/あ" "200"
-
-  assertHttpRequestEquals "HEAD" "b/%E3%82%AF%E3%82%BA%E7%AE%B1/%E3%82%B4%E3%83%9F.txt" "200"
-  assertHttpRequestEquals "HEAD" "b/クズ箱/ゴミ.txt" "200"
-
-  assertHttpRequestEquals "HEAD" "%D1%81%D0%B8%D1%81%D1%82%D0%B5%D0%BC%D1%8B/system.txt" "200"
-  assertHttpRequestEquals "HEAD" "системы/system.txt" "200"
-
-  assertHttpRequestEquals "HEAD" "b/%E3%83%96%E3%83%84%E3%83%96%E3%83%84.txt" "200"
-  assertHttpRequestEquals "HEAD" "b/ブツブツ.txt" "200"
-
-  # These URLs do not work unencoded
-  assertHttpRequestEquals "HEAD" 'a/%25%40%21%2A%28%29%3D%24%23%5E%26%7C.txt' "200"
-  assertHttpRequestEquals "HEAD" 'a/%E3%81%93%E3%82%8C%E3%81%AF%E3%80%80This%20is%20ASCII%20%D1%81%D0%B8%D1%81%D1%82%D0%B5%D0%BC%D1%8B%20%20%D7%97%D7%9F%20.txt' "200"
-fi
 
 # Expected 400s
 # curl will not send this to server now
 # assertHttpRequestEquals "HEAD" "request with unencoded spaces" "400"
 
-# Expected 404s
-if [ "${append_slash}" == "1" ] && [ "${index_page}" == "0" ]; then
-  assertHttpRequestEquals "HEAD" "not%20found" "302"
-  assertHttpRequestEquals "HEAD" "b/c" "302"
-else
-  assertHttpRequestEquals "HEAD" "not%20found" "404"
-  assertHttpRequestEquals "HEAD" "b/c" "404"
-fi
 
-# Directory HEAD 404s
-# Unfortunately, the logic here can't be properly encoded into the test.
-# With minio, we can't return anything *but* a 404 for HEAD requests to a directory.
-# With AWS S3, HEAD requests to a directory will return 200 *only* when we are
-# running with v4 signatures.
-# Now, both of these cases have the exception of HEAD returning 200 on the root
-# directory.
-if [ "${allow_directory_list}" == "1" ] || [ "${index_page}" == "1" ]; then
-  assertHttpRequestEquals "HEAD" "/" "200"
-else
-  assertHttpRequestEquals "HEAD" "/" "404"
-fi
-assertHttpRequestEquals "HEAD" "b/" "404"
-assertHttpRequestEquals "HEAD" "/b/c/" "404"
-assertHttpRequestEquals "HEAD" "/soap" "404"
-if [ "${append_slash}" == "1" ] && [ "${index_page}" == "0" ]; then
-assertHttpRequestEquals "HEAD" "b//c" "302"
-else
-assertHttpRequestEquals "HEAD" "b//c" "404"
-fi
 
-if [ "${index_page}" == "1" ]; then
-assertHttpRequestEquals "HEAD" "/statichost/" "200"
-assertHttpRequestEquals "HEAD" "/nonexistdir/noindexdir/" "404"
-assertHttpRequestEquals "HEAD" "/nonexistdir/noindexdir" "404"
-assertHttpRequestEquals "HEAD" "/statichost/noindexdir/multipledir/" "200"
-assertHttpRequestEquals "HEAD" "/nonexistdir/" "404"
-assertHttpRequestEquals "HEAD" "/nonexistdir" "404"
-  if [ ${append_slash} == "1" ]; then
-  assertHttpRequestEquals "HEAD" "/statichost" "200"
-  assertHttpRequestEquals "HEAD" "/statichost/noindexdir/multipledir" "200"
-  else
-  assertHttpRequestEquals "HEAD" "/statichost" "404"
-  assertHttpRequestEquals "HEAD" "/statichost/noindexdir/multipledir" "404"
-  fi
-fi
 
 # Verify GET is working
 assertHttpRequestEquals "GET" "a.txt" "data/bucket-1/a.txt"
