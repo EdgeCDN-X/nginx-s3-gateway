@@ -230,7 +230,7 @@ function _s3ReqParamsForSigV2(r, bucket) {
      * Thus, we can't put the path /dir1/ in the string to sign. */
     let uri = _isDirectory(r.variables.uri_path) ? '/' : r.variables.uri_path;
     // To return index pages + index.html
-    if (utils.parseBoolean(r.variables.forIndexPage) && _isDirectory(r.variables.uri_path)){
+    if (utils.parseBoolean(r.variables.forIndexPage) && _isDirectory(r.variables.uri_path)) {
         uri = r.variables.uri_path + INDEX_PAGE
     }
 
@@ -316,7 +316,7 @@ function s3uri(r) {
         }
     } else {
         // This is a path that will resolve to an index page
-        if (PROVIDE_INDEX_PAGE  && _isDirectory(uriPath) ) {
+        if (PROVIDE_INDEX_PAGE && _isDirectory(uriPath)) {
             uriPath += INDEX_PAGE;
         }
         path = _escapeURIPath(basePath + uriPath);
@@ -342,7 +342,7 @@ function _s3DirQueryParams(uriPath, method) {
 
     /* Return if static website. We don't want to list the files in the
        directory, we want to append the index page and get the fil. */
-    if (uriPath.endsWith(INDEX_PAGE)){
+    if (uriPath.endsWith(INDEX_PAGE)) {
         return '';
     }
 
@@ -381,14 +381,9 @@ function redirectToS3(r) {
     } else if (PROVIDE_INDEX_PAGE === true) {
         r.internalRedirect("@s3");
     } else if (!ALLOW_LISTING && !PROVIDE_INDEX_PAGE && uriPath === "/") {
-       r.internalRedirect("@error404");
+        r.internalRedirect("@error404");
     } else {
-        if (r.headersIn["Range"]) {
-            r.internalRedirect("@s3_sliced");
-        } else {
-           r.internalRedirect("@s3"); 
-        }
-        
+        r.internalRedirect("@s3");
     }
 }
 
@@ -399,11 +394,11 @@ function trailslashControl(r) {
         const path = r.variables.uri_path.split(/[?#]/)[0];
 
         const hasExtension = /\/[^.\/]+\.[^.]+$/;
-        if (!hasExtension.test(path)  && !_isDirectory(path)){
+        if (!hasExtension.test(path) && !_isDirectory(path)) {
             return r.internalRedirect("@trailslash");
         }
     }
-        r.internalRedirect("@error404");
+    r.internalRedirect("@error404");
 }
 
 /**
@@ -527,7 +522,7 @@ function _requireEnvVars(envVarName) {
     const isSet = envVarName in process.env;
 
     if (!isSet) {
-        throw(`Required environment variable ${envVarName} is missing`);
+        throw (`Required environment variable ${envVarName} is missing`);
     }
 }
 
