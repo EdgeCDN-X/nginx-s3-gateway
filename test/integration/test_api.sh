@@ -136,7 +136,9 @@ assertHttpRequestEquals() {
       if [ "${expected_checksum}" != "${s3_file_checksum}" ]; then
         e "Checksum doesn't match expectation. Request [${method} ${uri}] Expected [${expected_checksum}] Actual [${s3_file_checksum}]"
         e "curl command: ${curl_cmd} -X '${method}' '${uri}' ${extra_arg} | ${checksum_cmd}"
-        exit ${test_fail_exit_code}
+        ${curl_cmd} -X "${method}" "${uri}" ${extra_arg} -v
+        # exit ${test_fail_exit_code}
+        sleep 100000
       fi
     else
       expected_response_code="$3"

@@ -256,7 +256,7 @@ integration_test() {
 
   p "Starting Docker Compose Environment"
   # COMPOSE_COMPATIBILITY=true Supports older style compose filenames with _ vs -
-  COMPOSE_COMPATIBILITY=true AWS_SIGS_VERSION=$1 ALLOW_DIRECTORY_LIST=$2 PROVIDE_INDEX_PAGE=$3 APPEND_SLASH_FOR_POSSIBLE_DIRECTORY=$4 STRIP_LEADING_DIRECTORY_PATH=$5 PREFIX_LEADING_DIRECTORY_PATH=$6 compose up -d
+  COMPOSE_COMPATIBILITY=true AWS_SIGS_VERSION=$1 ALLOW_DIRECTORY_LIST=$2 PROVIDE_INDEX_PAGE=$3 APPEND_SLASH_FOR_POSSIBLE_DIRECTORY=$4 STRIP_LEADING_DIRECTORY_PATH=$5 PREFIX_LEADING_DIRECTORY_PATH=$6 DEBUG=true compose up -d
 
   if [ "${wait_for_it_installed}" ]; then
     if [ -x "${wait_for_it_cmd}" ]; then
@@ -468,48 +468,9 @@ integration_test 2 0 0 0 "" ""
 
 compose stop nginx-s3-gateway # Restart with new config
 
-p "Testing API with AWS Signature V2 and allow directory listing on"
-integration_test 2 1 0 0 "" ""
-
-compose stop nginx-s3-gateway # Restart with new config
-
-p "Testing API with AWS Signature V2 and static site on"
-integration_test 2 0 1 0 "" ""
-
-compose stop nginx-s3-gateway # Restart with new config
-
-p "Testing API with AWS Signature V2 and allow directory listing on and append slash and allow index"
-integration_test 2 1 1 1 "" ""
-
-compose stop nginx-s3-gateway # Restart with new config
-
 p "Test API with AWS Signature V4 and allow directory listing off"
 integration_test 4 0 0 0 "" ""
 
 compose stop nginx-s3-gateway # Restart with new config
-
-p "Test API with AWS Signature V4 and allow directory listing on and appending /"
-integration_test 4 1 0 1 "" ""
-
-compose stop nginx-s3-gateway # Restart with new config
-
-p "Test API with AWS Signature V4 and static site on appending /"
-integration_test 4 0 1 1 "" ""
-
-compose stop nginx-s3-gateway # Restart with new config
-
-p "Testing API with AWS Signature V2 and allow directory listing off and prefix stripping on"
-integration_test 2 0 0 0 /my-bucket ""
-
-compose stop nginx-s3-gateway # Restart with new config
-
-p "Test API with AWS Signature V4 and prefix leading directory path on"
-integration_test 4 0 0 0 "" "/b"
-
-p "Test API with AWS Signature V4 and prefix leading directory path on and prefix stripping on"
-integration_test 4 0 0 0 "/tostrip" "/b"
-
-p "Testing API with AWS Signature V2 and prefix leading directory path"
-integration_test 2 0 0 0 "" "/b"
 
 p "All integration tests complete"

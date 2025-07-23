@@ -42,12 +42,6 @@ _requireEnvVars('S3_STYLE');
 
 
 /**
- * Flag indicating debug mode operation. If true, additional information
- * about signature generation will be logged.
- * @type {boolean}
- */
-const ALLOW_LISTING = utils.parseBoolean(process.env['ALLOW_DIRECTORY_LIST']);
-/**
  * Flag indicating if index pages should be provided for directories.
  * @type {boolean}
  * */
@@ -102,11 +96,6 @@ const SERVICE = process.env['S3_SERVICE'] || "s3";
  * @param r {NginxHTTPRequest} HTTP request
  */
 function editHeaders(r) {
-    const isDirectoryHeadRequest =
-        ALLOW_LISTING &&
-        r.method === 'HEAD' &&
-        _isDirectory(decodeURIComponent(r.variables.uri_path));
-
     /* Strips all x-amz- (if x-amz- is not in ADDITIONAL_HEADER_PREFIXES_ALLOWED) headers from the output HTTP headers so that the
      * requesters to the gateway will not know you are proxying S3. */
     if ('headersOut' in r) {
@@ -114,22 +103,12 @@ function editHeaders(r) {
             const headerName = key.toLowerCase()
             /* We delete all headers when it is a directory head request because
              * none of the information is relevant for passing on via a gateway. */
-            if (isDirectoryHeadRequest) {
-                delete r.headersOut[key];
-            } else if (
+            if (
                 !_isHeaderToBeAllowed(headerName, ADDITIONAL_HEADER_PREFIXES_ALLOWED)
                 && _isHeaderToBeStripped(headerName, ADDITIONAL_HEADER_PREFIXES_TO_STRIP)
             ) {
                 delete r.headersOut[key];
             }
-        }
-
-        /* Transform content type returned on HEAD requests for directories
-         * if directory listing is enabled. If you change the output format
-         * for the XSL stylesheet from HTML to something else, you will
-         * want to change the content type below. */
-        if (isDirectoryHeadRequest) {
-            r.headersOut['Content-Type'] = 'text/html; charset=utf-8'
         }
     }
 }
@@ -235,7 +214,7 @@ function _s3ReqParamsForSigV2(r, bucket) {
     }
 
     return {
-        uri: '/' + bucket + uri,
+        uri: '/' + bucket + _escapeURIPath(uri),
         httpDate: s3date(r)
     };
 }
@@ -304,26 +283,7 @@ function s3BaseUri(r) {
 function s3uri(r) {
     let uriPath = r.variables.uri_path;
     const basePath = s3BaseUri(r);
-    let path;
-
-    // Create query parameters only if directory listing is enabled.
-    if (ALLOW_LISTING && !utils.parseBoolean(r.variables.forIndexPage)) {
-        const queryParams = _s3DirQueryParams(uriPath, r.method);
-        if (queryParams.length > 0) {
-            path = basePath + '?' + queryParams;
-        } else {
-            path = _escapeURIPath(basePath + uriPath);
-        }
-    } else {
-        // This is a path that will resolve to an index page
-        if (PROVIDE_INDEX_PAGE && _isDirectory(uriPath)) {
-            uriPath += INDEX_PAGE;
-        }
-        path = _escapeURIPath(basePath + uriPath);
-    }
-
-    utils.debug_log(r, 'S3 Request URI: ' + r.method + ' ' + path);
-    return path;
+    return _escapeURIPath(basePath + uriPath);
 }
 
 /**
@@ -374,13 +334,8 @@ function redirectToS3(r) {
     }
 
     const uriPath = r.variables.uri_path;
-    const isDirectoryListing = ALLOW_LISTING && _isDirectory(uriPath);
 
-    if (isDirectoryListing && (r.method === 'GET' || r.method === 'HEAD')) {
-        r.internalRedirect("@s3PreListing");
-    } else if (PROVIDE_INDEX_PAGE === true) {
-        r.internalRedirect("@s3");
-    } else if (!ALLOW_LISTING && !PROVIDE_INDEX_PAGE && uriPath === "/") {
+    if (uriPath === "/") {
         r.internalRedirect("@error404");
     } else {
         r.internalRedirect("@s3");
